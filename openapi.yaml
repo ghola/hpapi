@@ -1,0 +1,269 @@
+openapi: 3.0.0
+info:
+  title: HP Public API
+  version: '0.1'
+  description: |
+    # OpenAPI Specification
+    This API is documented in [OpenAPI v3](https://swagger.io/specification/) format.
+
+    # Authentication
+    The HP API uses uses
+    [basic http](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication) authentication in which
+    the username is the API key and the password is an empty string.
+
+    If you're using cURL it's a simple as:
+    ```php
+    curl_setopt($process, CURLOPT_USERPWD, $apiKey . ":");
+    ```
+
+    If you're using a library like guzzle (recommended) it goes something like this:
+    ```php
+    $client = new Client();
+
+    $response = $client->request(
+        'POST',
+        $url,
+        [
+          'auth' => [$apiKey, '']
+        ]
+    );
+    ```
+
+    # Pagination
+    Resources which return collections support pagination. By default a number 10 collection entries will be returned,
+    but this can be increased to a maximum of 100 list entries by specifying the `limit` URL parameter.
+
+    The type of pagination employed is cursor based pagination. A typical response will look like this:
+    ```json
+    {
+        "data": [
+            {
+                // data of an entity here
+            },
+            {
+                // data of another entity here
+            }
+        ],
+        "paging": {
+            "cursors": {
+                "after": "kx1V5",
+                "before": "zNnDz"
+            },
+            "limit": 10,
+            "count": 5
+        }
+    }
+    ```
+
+    Notice the `"paging"` key:
+    - `"limit"` will display the maximum number of entries that can be returned.
+      It will either be the default (value `10`) of a limit you explicitly set via the `limit` URL parameter.
+    - `"count"` is the number of items actually returned, so the number of entries in the `"data"` array.
+      `"count"` will always be less or equal to `"limit"` and it helps you tell if there are any more records
+      to be fetched (if it's less than `"limit"` it means those are the last items).
+    - `"cursors"` contains the after and before cursors you can use to move onto the next or the previous page.
+      Given the example above, to fetch the next page of data you would need to add `after=kx1V5` as a parameter
+      to your URL. To fetch the previous page you would add `before=zNnDz`. The cursors are obfuscated so that
+      you do not rely on them in any other way than temporarily. Please do not store them as they are subject
+      to change.
+
+    Also note that all collections are ordered by creation date in descending order. This means that
+    the first entries are always the newest and this applies to both elements of a collection and pages.
+
+    # Error Responses
+    Whenever an error appears (whether it's a notifier bug which leads to an internal server error,
+    or a simple validation error) the API response will be in the
+    [Problem Details](https://tools.ietf.org/html/rfc7807) format
+
+    For example, a 404 response body would look like:
+    ```json
+    {
+        "status": 404,
+        "type": "problems/resource-not-found",
+        "title": "Resource not found",
+        "detail": "Drop with ID '8657a94eb7b34a60b6fa65763b3c91295' does not exist."
+    }
+    ```
+servers:
+  - url: https://api.hpcomminc.com
+    description: Production Server
+paths:
+  /jobs/{job_id}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+      tags:
+        - Jobs
+      summary: Get a Jobs By ID (phase 4)
+      operationId: Jobs\GetJob
+  /jobs:
+    get:
+      tags:
+        - Jobs
+      summary: List existing Jobs (phase 4)
+      operationId: Jobs\GetJobs
+  /jobs/{job_id}/projects/{project_id}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+        - $ref: '#/components/parameters/project_id'
+      tags:
+        - Projects
+      summary: Get a Project By ID (phase 4)
+      operationId: Projects\GetProject
+  /jobs/{job_id}/projects:
+    get:
+      tags:
+        - Projects
+      summary: List existing Projects (phase 4)
+      operationId: Projects\GetProjects
+  /jobs/{job_id}/projects/{project_id}/drops/{drop_id}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+        - $ref: '#/components/parameters/project_id'
+        - $ref: '#/components/parameters/drop_id'
+      tags:
+        - Drops
+      summary: Get a Drop By ID (phase 2)
+      operationId: Drops\GetDrop
+    patch:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+        - $ref: '#/components/parameters/project_id'
+        - $ref: '#/components/parameters/drop_id'
+      tags:
+        - Drops
+      summary: Update a Drop (phase 1)
+      operationId: Drops\UpdateDrop
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+        - $ref: '#/components/parameters/project_id'
+        - $ref: '#/components/parameters/drop_id'
+      tags:
+        - Drops
+      summary: Delete/Cancel a Drop (phase 4)
+      operationId: Drops\DeleteDrop
+  /jobs/{job_id}/projects/{project_id}/drops:
+    post:
+      tags:
+        - Drops
+      summary: Create a new Drop (phase 1)
+      operationId: Drops\CreateDrop
+    get:
+      tags:
+        - Drops
+      summary: List existing Drops (phase 3)
+      operationId: Drops\GetDrops
+  /jobs/{job_id}/projects/{project_id}/drops/{drop_id}/comments:
+    post:
+      tags:
+        - Drop Comments
+      summary: Create a new Drop Comment (phase 2)
+      operationId: DropComments\CreateComment
+    get:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+        - $ref: '#/components/parameters/project_id'
+        - $ref: '#/components/parameters/drop_id'
+      tags:
+        - Drop Comments
+      summary: List existing Drop Comments (phase 2)
+      operationId: DropComments\GetComments
+  /jobs/{job_id}/site-surveys/{site_survey_id}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/job_id'
+        - $ref: '#/components/parameters/site_survey_id'
+      tags:
+        - Site Surveys
+      summary: Get a Site Survey By ID (phase 2)
+      operationId: SiteSurveys\GetSiteSurvey
+  /jobs/{job_id}/site-surveys:
+    get:
+      tags:
+        - Site Surveys
+      summary: List existing Site Surveys (phase 3)
+      operationId: SiteSurveys\GetSiteSurveys
+  /users/{user_id}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      tags:
+        - Users
+      summary: Get a User By ID (phase 4)
+      operationId: Users\GetUser
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List existing Users (phase 4)
+      operationId: Users\GetUsers
+components:
+  parameters:
+    job_id:
+      name: job_id
+      in: path
+      required: true
+      description: The ID of the Job
+      schema:
+        type: integer
+    project_id:
+      name: project_id
+      in: path
+      required: true
+      description: The ID of the Project
+      schema:
+        type: integer
+        type: integer
+    drop_id:
+      name: drop_id
+      in: path
+      required: true
+      description: The ID of the Drop
+      schema:
+        type: integer
+        type: integer
+    site_survey_id:
+      name: site_survey_id
+      in: path
+      required: true
+      description: The ID of the Site Survey
+      schema:
+        type: integer
+        type: integer
+    user_id:
+      name: user_id
+      in: path
+      required: true
+      description: The ID of the User
+      schema:
+        type: integer
+    limit:
+      name: limit
+      in: query
+      description: The number of items to return. If not present, the default is 10 items.
+      schema:
+        type: integer
+        default: 10
+        maximum: 100
+    after:
+      name: after
+      in: query
+      description: The cursor that points to the start of the page. Cannot be used at the same time as "before".
+      schema:
+        type: string
+    before:
+      name: before
+      in: query
+      description: The cursor that points to the end of the page. Cannot be used at the same time as "after".
+      schema:
+        type: string
+tags:
+  - name: Jobs
+  - name: Projects
+  - name: Drops
+  - name: Drop Comments
+  - name: Site Surveys
+  - name: Users
