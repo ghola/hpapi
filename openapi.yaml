@@ -171,6 +171,12 @@ paths:
         - Drop Comments
       summary: List existing Drop Comments (phase 2)
       operationId: DropComments\GetComments
+  /jobs/{job_id}/projects/{project_id}/drops/{drop_id}/comments/{comment_id}:
+    patch:
+      tags:
+        - Drop Comments
+      summary: Update a Drop Comment (phase 2)
+      operationId: DropComments\UpdateComment
   /jobs/{job_id}/site-surveys/{site_survey_id}:
     get:
       parameters:
@@ -216,7 +222,6 @@ components:
       description: The ID of the Project
       schema:
         type: integer
-        type: integer
     drop_id:
       name: drop_id
       in: path
@@ -224,6 +229,12 @@ components:
       description: The ID of the Drop
       schema:
         type: integer
+    comment_id:
+      name: comment_id
+      in: path
+      required: true
+      description: The ID of the Comment
+      schema:
         type: integer
     site_survey_id:
       name: site_survey_id
@@ -231,7 +242,6 @@ components:
       required: true
       description: The ID of the Site Survey
       schema:
-        type: integer
         type: integer
     user_id:
       name: user_id
